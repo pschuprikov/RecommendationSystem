@@ -3,3 +3,8 @@
 
 # Example code in package build process
 *-Ex.R
+
+.idea/libraries
+workspace.xml
+tasks.xml
+.iws
