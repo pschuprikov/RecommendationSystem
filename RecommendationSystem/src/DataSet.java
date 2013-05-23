@@ -168,6 +168,7 @@ class DataSet {
 
                 users.add(new UserData(userIDs.get(i), userTotalListened.get(i), curArtistsArray, curNumListenedArray));
             }
+            System.err.println("Dataset: " + getNumArtists() + " artists; " + getNumUsers() + "users.");
         }
     }
 

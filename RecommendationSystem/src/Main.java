@@ -11,14 +11,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             final DataSet ds = new DataSet(new File("/home/pasha/Downloads/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv"));
-            System.err.println("artists red: " + ds.getNumArtists());
-
-            int cnt = 0;
-            for (int i = 0; i < ds.getNumUsers(); i++) {
-                if (ds.getUserData(i).totalListened > 1000)
-                    cnt++;
-            }
-            System.err.println("cnt:" + cnt);
+            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config());
 
             Integer[] order = new Integer[ds.getNumArtists()];
             for (int i = 0; i < order.length; i++)
@@ -49,7 +42,7 @@ public class Main {
                 for (int j = 0; j < knn.size(); j++)
                     w.put(i, j, Math.max(w.get(i, j), w.get(j, i)));
 
-            SpectralClustering.cluster(w);
+            clustering.cluster(w);
 
         } catch (IOException e) {
             e.printStackTrace();
