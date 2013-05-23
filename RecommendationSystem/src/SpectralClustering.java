@@ -38,9 +38,11 @@ public class SpectralClustering {
 
         final DoubleMatrix[] res = getEigenValues(w);
         final double[][] pts = new double[w.getColumns()][config.numClusters];
-        for (int i = 1; i <= config.numClusters; i++)
+
+        for (int i = 1; i <= config.numClusters; i++) {
             for (int j = 0; j < w.getColumns(); j++)
                 pts[j][i - 1] = res[0].get(i, j);
+        }
 
         final int[][] result = kmeans.getClusters(pts, config.numClusters);
 

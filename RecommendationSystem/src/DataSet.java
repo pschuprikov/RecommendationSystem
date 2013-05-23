@@ -146,7 +146,7 @@ class DataSet {
                 final ArrayList<Integer> curArtists = userArtists.get(i);
                 final ArrayList<Integer> curNumListened = userNumListened.get(i);
 
-                final Integer[] order = order(curArtists);
+                final Integer[] order = order(curNumListened);
 
                 int cnt = 1;
                 for (int j = 1; j < order.length; j++)
@@ -198,7 +198,15 @@ class DataSet {
         return artists.get(artistIdx);
     }
 
+    ArtistData getArtistData(String artistHash) {
+        return artists.get(aid2int.get(artistHash));
+    }
+
     UserData getUserData(int userIdx) {
         return users.get(userIdx);
+    }
+
+    UserData getUserData(String userHash) {
+        return users.get(uid2int.get(userHash));
     }
 }

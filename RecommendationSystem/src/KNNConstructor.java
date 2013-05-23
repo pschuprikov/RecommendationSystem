@@ -63,7 +63,7 @@ public class KNNConstructor {
 
             for (int i = 0; i < neighs.size(); i++) {
                 final int neighIdx = neighs.get(i);
-                adj.add(new Edge(neighIdx, 1. - -weights[neighIdx] / cnt[neighIdx]));
+                adj.add(new Edge(neighIdx, 1. - weights[neighIdx] / cnt[neighIdx]));
             }
 
 

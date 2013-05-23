@@ -85,9 +85,12 @@ public class Kmeans {
         for (int i = 0; i < k; ++i) {
             centroinds[i] = vec[i];
         }
+        int numIterations = 0;
         while(!rebuildclusters(vec, k)) {
             recalcCentroinds(vec, k);
+            numIterations++;
         }
+        System.err.println("numIterations: " + numIterations);
 
         final int[][] result = new int[k][];
         for (int i = 0; i < result.length; i++) {
