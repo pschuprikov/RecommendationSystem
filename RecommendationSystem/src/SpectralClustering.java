@@ -34,16 +34,19 @@ public class SpectralClustering {
     int[][] cluster(DoubleMatrix w) {final long start = System.currentTimeMillis();
         System.err.println("start");
 
-        convertToUnnormalizedLaplacian(w);
+        System.err.println("Matrix construction...");
+        convertToNormalizedLaplacian(w);
 
+        System.err.println("Eigen value decomposition...");
         final DoubleMatrix[] res = getEigenValues(w);
         final double[][] pts = new double[w.getColumns()][config.numClusters];
 
         for (int i = 1; i <= config.numClusters; i++) {
             for (int j = 0; j < w.getColumns(); j++)
-                pts[j][i - 1] = res[0].get(i, j);
+                pts[j][i - 1] = res[0].get(j, i);
         }
 
+        System.err.println("Kmeans...");
         final int[][] result = kmeans.getClusters(pts, config.numClusters);
 
         System.err.println("finish");

@@ -86,9 +86,10 @@ public class Kmeans {
             centroinds[i] = vec[i];
         }
         int numIterations = 0;
-        while(!rebuildclusters(vec, k)) {
+        while(!rebuildclusters(vec, k) && numIterations < 1000) {
             recalcCentroinds(vec, k);
             numIterations++;
+            System.err.println(numIterations);
         }
         System.err.println("numIterations: " + numIterations);
 

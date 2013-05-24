@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             final DataSet ds = new DataSet(new File("/home/pasha/Downloads/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv"));
-            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config().setNumClusters(50));
+            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config().setNumClusters(100));
 
             final Integer[] mostPopularOrder = new Integer[ds.getNumArtists()];
             for (int i = 0; i < mostPopularOrder.length; i++)
@@ -29,7 +29,10 @@ public class Main {
                 mostPopularArtists[i] = mostPopularOrder[i];
             }
 
-            final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, 5);
+            final int KNEAREST = 3;
+            //final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, new IntersectionWeightPolicy(mostPopularArtists, ds));
+            final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, new DiffListenedWeightPolicy(mostPopularArtists.length));
+            //final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, new CosineWeightPolicy(mostPopularArtists, ds));
             final DoubleMatrix w = new DoubleMatrix(knn.size(), knn.size());
             for (int i = 0; i < knn.size(); i++) {
                 for (Graph.Edge e : knn.adj(i))
@@ -83,10 +86,10 @@ public class Main {
                 }
             }
 
-            System.err.println("totalHist: " + totalHits + "; totalMisses: " + totalMisses + "; avgBest: " +
+            System.err.println("totalHits: " + totalHits + "; totalMisses: " + totalMisses + "; avgBest: " +
                     (sumBest / totalHits) + "; avgBestPercent: " + (sumBestPercent / totalHits));
 
-            runInteractive(ds, rs);
+            //runInteractive(ds, rs);
         } catch (IOException e) {
             e.printStackTrace();
         }
