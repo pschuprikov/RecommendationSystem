@@ -15,8 +15,11 @@ public class CosineWeightPolicy implements WeightPolicy {
         weights = new double[artists.length];
 
         for (int i = 0; i < artists.length; i++) {
-            for (int n : ds.getArtistData(artists[i]).numListened)
-                norms[i] += n * n;
+            for (int n : ds.getArtistData(artists[i]).numListened) {
+                norms[i] += 1L * n * n;
+                if (norms[i] < 0)
+                    throw new AssertionError();
+            }
             norms[i] = Math.sqrt(norms[i]);
         }
     }
@@ -34,7 +37,7 @@ public class CosineWeightPolicy implements WeightPolicy {
             neighs.add(otherArtist);
             weights[otherArtist] = 0;
         }
-        weights[otherArtist] += (numListened * otherNumListened / norms[currentArtist]);
+        weights[otherArtist] += (1L * numListened * otherNumListened / norms[currentArtist]);
     }
 
     @Override
@@ -42,6 +45,8 @@ public class CosineWeightPolicy implements WeightPolicy {
         Edge[] result = new Edge[neighs.size()];
         for (int i = 0; i < neighs.size(); i++) {
             final int otherArtist = neighs.get(i);
+            if (Double.isNaN(weights[otherArtist]))
+                throw new AssertionError();
             result[i] = new Edge(otherArtist, Math.max(0, 1. - weights[otherArtist] / norms[otherArtist]));
         }
         return result;

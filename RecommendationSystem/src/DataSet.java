@@ -64,11 +64,7 @@ class DataSet {
             final ArrayList<ArrayList<Integer>> artistUsers = new ArrayList<>();
             final ArrayList<ArrayList<Integer>> artistNumListened = new ArrayList<>();
 
-            int numLines = 0;
             while (true) {
-                numLines++;
-                if (numLines % 1000 == 0)
-                    System.err.println("Line # " + numLines);
                 final String line = br.readLine();
                 if (line == null)
                     break;
@@ -131,6 +127,8 @@ class DataSet {
                      if (j == 0 || curUsers.get(order[j]) != curUsers.get(order[j - 1])) {
                          final int user = curUsers.get(order[j]);
                          final int numListened = curNumListened.get(order[j]);
+                         if (numListened > 50000)
+                             System.err.println("BIIIG:" + artistNames.get(i));
 
                          curUsersArray[cnt] = user;
                          curNumListenedArray[cnt++] = numListened;

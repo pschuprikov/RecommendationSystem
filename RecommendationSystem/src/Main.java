@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             final DataSet ds = new DataSet(new File("/home/pasha/Downloads/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv"));
-            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config().setNumClusters(100));
+            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config().setNumClusters(50));
 
             final Integer[] mostPopularOrder = new Integer[ds.getNumArtists()];
             for (int i = 0; i < mostPopularOrder.length; i++)
@@ -25,14 +25,13 @@ public class Main {
             });
 
             final int[] mostPopularArtists = new int[Math.min(1000, mostPopularOrder.length)];
-            for (int i = 0; i < mostPopularArtists.length; i++) {
+            for (int i = 0; i < mostPopularArtists.length; i++)
                 mostPopularArtists[i] = mostPopularOrder[i];
-            }
 
-            final int KNEAREST = 3;
-            //final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, new IntersectionWeightPolicy(mostPopularArtists, ds));
-            final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, new DiffListenedWeightPolicy(mostPopularArtists.length));
-            //final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, new CosineWeightPolicy(mostPopularArtists, ds));
+            final int KNEAREST = 4;
+            WeightPolicy weights = new PearsonWeightPolicy(mostPopularArtists, ds);
+            //WeightPolicy weights = new CosineWeightPolicy(mostPopularArtists, ds);
+            final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, weights);
             final DoubleMatrix w = new DoubleMatrix(knn.size(), knn.size());
             for (int i = 0; i < knn.size(); i++) {
                 for (Graph.Edge e : knn.adj(i))
@@ -53,46 +52,73 @@ public class Main {
             }
 
             RecommendationSystem rs = new RecommendationSystem(ds, mostPopularArtists, result);
-            final Random rng = new Random();
-            int totalHits = 0;
-            int totalMisses = 0;
-            double sumBest = 0;
-            double sumBestPercent = 0;
-            System.err.println("Starting testing...");
-            for (int i = 0; i < 10000; i++) {
-                final int uid = rng.nextInt(ds.getNumUsers());
-                final DataSet.UserData data = ds.getUserData(uid);
 
-                int best = -1;
-                double bestPercent = 0;
-                for (int aid : rs.recommend(data)) {
-                    for (int artIdx = 0; artIdx < data.artists.length; artIdx++)
-                        if (data.artists[artIdx] == aid) {
-                            final int place = (data.artists.length - 1 - artIdx);
-                            final double percent = data.numListened[artIdx] / (double) data.totalListened;
+            testExpectedListens(ds, mostPopularArtists, rs);
 
-                            if (best == -1 || place < best) {
-                                best = place;
-                                bestPercent = percent;
-                            }
-                        }
-                }
-                if (best == -1)
-                    totalMisses++;
-                else {
-                    totalHits++;
-                    sumBest += best;
-                    sumBestPercent += bestPercent;
-                }
-            }
-
-            System.err.println("totalHits: " + totalHits + "; totalMisses: " + totalMisses + "; avgBest: " +
-                    (sumBest / totalHits) + "; avgBestPercent: " + (sumBestPercent / totalHits));
-
+            //testRecommendationPlace(ds, rs);
             //runInteractive(ds, rs);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void testExpectedListens(DataSet ds, int[] mostPopularArtists, RecommendationSystem rs) {
+        Random rng = new Random();
+        int count = 0;
+        double sumRelativeDiff = 0;
+        for (int i = 0; i < 1000; i++) {
+            int artistIdx = mostPopularArtists[rng.nextInt(mostPopularArtists.length)];
+            final DataSet.ArtistData data = ds.getArtistData(artistIdx);
+            final int artistUserIdx = rng.nextInt(data.users.length);
+            int userIdx = data.users[artistUserIdx];
+            final double real = data.numListened[artistUserIdx];
+            final double expect = rs.expectNumListenedExcluded(userIdx, artistIdx);
+            if (expect >= 0)
+                sumRelativeDiff += Math.abs(real - expect) / Math.max(real, expect); count++;
+        }
+
+        if (count == 0)
+            throw new AssertionError();
+
+        System.err.println("Result: " + sumRelativeDiff / count);
+    }
+
+    private static void testRecommendationPlace(DataSet ds, RecommendationSystem rs) {
+        final Random rng = new Random();
+        int totalHits = 0;
+        int totalMisses = 0;
+        double sumBest = 0;
+        double sumBestPercent = 0;
+        System.err.println("Starting testing...");
+        for (int i = 0; i < 10000; i++) {
+            final int uid = rng.nextInt(ds.getNumUsers());
+            final DataSet.UserData data = ds.getUserData(uid);
+
+            int best = -1;
+            double bestPercent = 0;
+            for (int aid : rs.recommend(data)) {
+                for (int artIdx = 0; artIdx < data.artists.length; artIdx++)
+                    if (data.artists[artIdx] == aid) {
+                        final int place = (data.artists.length - 1 - artIdx);
+                        final double percent = data.numListened[artIdx] / (double) data.totalListened;
+
+                        if (best == -1 || place < best) {
+                            best = place;
+                            bestPercent = percent;
+                        }
+                    }
+            }
+            if (best == -1)
+                totalMisses++;
+            else {
+                totalHits++;
+                sumBest += best;
+                sumBestPercent += bestPercent;
+            }
+        }
+
+        System.err.println("totalHits: " + totalHits + "; totalMisses: " + totalMisses + "; avgBest: " +
+                (sumBest / totalHits) + "; avgBestPercent: " + (sumBestPercent / totalHits));
     }
 
     private static void runInteractive(DataSet ds, RecommendationSystem rs) {

@@ -10,7 +10,7 @@ public interface WeightPolicy {
 
         @Override
         public int compareTo(Edge o) {
-            return Double.compare(weight, o.weight) != 0 ? Double.compare(weight, o.weight) : Integer.compare(neigh, o.neigh);
+            return Double.compare(weight, o.weight) != 0 ? -Double.compare(weight, o.weight) : Integer.compare(neigh, o.neigh);
         }
     }
 
