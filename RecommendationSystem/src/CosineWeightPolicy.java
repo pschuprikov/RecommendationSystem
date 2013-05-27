@@ -47,7 +47,7 @@ public class CosineWeightPolicy implements WeightPolicy {
             final int otherArtist = neighs.get(i);
             if (Double.isNaN(weights[otherArtist]))
                 throw new AssertionError();
-            result[i] = new Edge(otherArtist, Math.max(0, 1. - weights[otherArtist] / norms[otherArtist]));
+            result[i] = new Edge(otherArtist, Math.max(0, 1. + weights[otherArtist] / norms[otherArtist]));
         }
         return result;
     }

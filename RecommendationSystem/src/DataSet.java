@@ -127,8 +127,6 @@ class DataSet {
                      if (j == 0 || curUsers.get(order[j]) != curUsers.get(order[j - 1])) {
                          final int user = curUsers.get(order[j]);
                          final int numListened = curNumListened.get(order[j]);
-                         if (numListened > 50000)
-                             System.err.println("BIIIG:" + artistNames.get(i));
 
                          curUsersArray[cnt] = user;
                          curNumListenedArray[cnt++] = numListened;

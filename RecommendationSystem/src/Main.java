@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             final DataSet ds = new DataSet(new File("/home/pasha/Downloads/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv"));
-            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config().setNumClusters(50));
+            SpectralClustering clustering = new SpectralClustering(new SpectralClustering.Config().setNumClusters(80));
 
             final Integer[] mostPopularOrder = new Integer[ds.getNumArtists()];
             for (int i = 0; i < mostPopularOrder.length; i++)
@@ -28,7 +28,7 @@ public class Main {
             for (int i = 0; i < mostPopularArtists.length; i++)
                 mostPopularArtists[i] = mostPopularOrder[i];
 
-            final int KNEAREST = 4;
+            final int KNEAREST = 10;
             WeightPolicy weights = new PearsonWeightPolicy(mostPopularArtists, ds);
             //WeightPolicy weights = new CosineWeightPolicy(mostPopularArtists, ds);
             final Graph knn = KNNConstructor.construct(ds, mostPopularArtists, KNEAREST, weights);
@@ -54,7 +54,6 @@ public class Main {
             RecommendationSystem rs = new RecommendationSystem(ds, mostPopularArtists, result);
 
             testExpectedListens(ds, mostPopularArtists, rs);
-
             //testRecommendationPlace(ds, rs);
             //runInteractive(ds, rs);
         } catch (IOException e) {
@@ -65,22 +64,27 @@ public class Main {
     private static void testExpectedListens(DataSet ds, int[] mostPopularArtists, RecommendationSystem rs) {
         Random rng = new Random();
         int count = 0;
-        double sumRelativeDiff = 0;
-        for (int i = 0; i < 1000; i++) {
+        double sum = 0;
+        while(count < 1000) {
             int artistIdx = mostPopularArtists[rng.nextInt(mostPopularArtists.length)];
             final DataSet.ArtistData data = ds.getArtistData(artistIdx);
             final int artistUserIdx = rng.nextInt(data.users.length);
-            int userIdx = data.users[artistUserIdx];
             final double real = data.numListened[artistUserIdx];
-            final double expect = rs.expectNumListenedExcluded(userIdx, artistIdx);
-            if (expect >= 0)
-                sumRelativeDiff += Math.abs(real - expect) / Math.max(real, expect); count++;
+            int userIdx = data.users[artistUserIdx];
+            if (ds.getUserData(userIdx).totalListened < 10000)
+                continue;
+            final RecommendationSystem.Stat result = rs.expectNumListenedExcluded(userIdx, artistIdx);
+            if (result.found && result.intersection >= 5) {
+                count++;
+                sum += Math.abs(real - result.expected) / Math.max(real, result.expected);
+                System.err.println("intersection: " + result.intersection);
+            }
         }
 
         if (count == 0)
             throw new AssertionError();
 
-        System.err.println("Result: " + sumRelativeDiff / count);
+        System.err.println("Result: " + sum / count + "(" + count + ")");
     }
 
     private static void testRecommendationPlace(DataSet ds, RecommendationSystem rs) {

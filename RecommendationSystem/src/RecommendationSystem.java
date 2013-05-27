@@ -78,7 +78,7 @@ public class RecommendationSystem {
                 bi++;
             }
         }
-        return Math.abs(dot) / (Math.sqrt(sumSqrA) * Math.sqrt(sumSqrB));
+        return dot / (Math.sqrt(sumSqrA) * Math.sqrt(sumSqrB));
     }
 
     double getPearson(DataSet.ArtistData a, DataSet.ArtistData b) {
@@ -110,28 +110,51 @@ public class RecommendationSystem {
         return (dot - sumA * sumB / ds.getNumUsers()) / (Math.sqrt(sumSqrA - sumA * sumA / ds.getNumUsers()) * Math.sqrt(sumSqrB - sumB * sumB / ds.getNumUsers()));
     }
 
-    double expectNumListenedExcluded(int userIdx, int artistIdx) {
+    static class Stat {
+        final boolean found;
+        final double expected;
+        final int intersection;
+
+        Stat(double expected, int intersection) {
+            this.expected = expected;
+            this.found = true;
+            this.intersection = intersection;
+        }
+
+        Stat() {
+            this.expected = 0;
+            this.found = false;
+            this.intersection = 0;
+        }
+    }
+
+    Stat expectNumListenedExcluded(int userIdx, int artistIdx) {
         if (artistToCluster[artistIdx] == -1)
             throw new AssertionError();
-        final DataSet.UserData data = ds.getUserData(userIdx);
+        final DataSet.UserData userData = ds.getUserData(userIdx);
+        final DataSet.ArtistData artistData = ds.getArtistData(artistIdx);
         int[] cluster = clusters[artistToCluster[artistIdx]];
         double totalSimilarity = 0;
         double weightedSum = 0;
+        int count = 0;
         for (int i = 0; i < cluster.length; i++) {
             final int curArtist = artists[cluster[i]];
+            final DataSet.ArtistData otherArtistData = ds.getArtistData(curArtist);
             if (curArtist == artistIdx)
                 continue;
-            //final double weight = getCosine(ds.getArtistData(artistIdx), ds.getArtistData(curArtist));
-            final double weight = getPearson(ds.getArtistData(artistIdx), ds.getArtistData(curArtist));
-            for (int j = 0; j < data.artists.length; j++) {
-                if (data.artists[j] == curArtist) {
+            final double weight = getPearson(artistData, ds.getArtistData(curArtist));
+            for (int j = 0; j < userData.artists.length; j++) {
+                if (userData.artists[j] == curArtist) {
+                    count++;
                     totalSimilarity += Math.abs(weight);
-                    weightedSum += weight * data.numListened[j];
+                    weightedSum += weight * userData.numListened[j];
                 }
             }
         }
+
         if (totalSimilarity == 0)
-            return -1;
-        return weightedSum / totalSimilarity;
+            return new Stat();
+        else
+            return new Stat(weightedSum / totalSimilarity, count);
     }
 }

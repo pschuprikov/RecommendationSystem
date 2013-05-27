@@ -26,7 +26,7 @@ public class PearsonWeightPolicy implements WeightPolicy {
                 sum[i] += n;
                 square += 1L * n * n;
             }
-            disp[i] = Math.sqrt(square - sum[i] * sum[i] / ds.getNumUsers());
+            disp[i] = Math.sqrt(square - sum[i] * sum[i] / numUsers);
         }
     }
 
@@ -43,7 +43,7 @@ public class PearsonWeightPolicy implements WeightPolicy {
             neighs.add(otherArtist);
             dot[otherArtist] = 0;
         }
-        dot[otherArtist] += numListened * otherNumListened / (disp[currentArtist] * disp[otherArtist]);
+        dot[otherArtist] += 1L * numListened * otherNumListened / (disp[currentArtist] * disp[otherArtist]);
     }
 
     @Override
@@ -51,12 +51,8 @@ public class PearsonWeightPolicy implements WeightPolicy {
         Edge[] result = new Edge[neighs.size()];
         for (int i = 0; i < neighs.size(); i++) {
             final int otherArtist = neighs.get(i);
-            if (disp[currentArtist] < 1.e-7 || disp[otherArtist] < 1.e-7) {
-                i = i + 1 - 1;
-            }
-
             double weight = dot[otherArtist] - sum[otherArtist] * sum[currentArtist] / (disp[currentArtist] * disp[otherArtist] * numUsers);
-            result[i] = new Edge(otherArtist, 1. + weight);
+            result[i] = new Edge(otherArtist, weight + 1);
         }
         return result;
     }
